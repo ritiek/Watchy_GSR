@@ -3,6 +3,7 @@
 // Place all of your data and variables here.
 
 //RTC_DATA_ATTR uint8_t MyStyle;  // Remember RTC_DATA_ATTR for your variables so they don't get wiped on deep sleep.
+RTC_DATA_ATTR uint8_t WIFI_STEP = 0;
 
 
 class OverrideGSR : public WatchyGSR {
@@ -40,15 +41,54 @@ class OverrideGSR : public WatchyGSR {
     };
 */
 
-/*
     void InsertWiFi(){
-    };
-*/
+      switch (WIFI_STEP){
+        case 1: {
+          // TODO: Make sure this is resilient using the following?
+          // if (WiFi.status() != WL_CONNECTED){
+          //   if(currentWiFi() == WL_CONNECT_FAILED){
+          //     break;
+          //   }
+          HTTPClient http;
+          http.setConnectTimeout(3000);
+          String powerURL = "http://192.168.1.20/cm?cmnd=Power%20TOGGLE";
+          http.begin(powerURL.c_str());
+          int httpResponseCode = http.GET();
+          http.end();
+          WIFI_STEP++;
+          endWiFi();
 
-/*
-    void InsertWiFiEnding(){
+          VibeTo(true);
+          delay(40);
+          VibeTo(false);
+
+          // TODO: Figure out why there's no text visible on the black screen.
+          /*
+          if (httpResponseCode < 200 || httpResponseCode > 300) {
+            display.setFullWindow();
+            display.fillScreen(GxEPD_BLACK);
+            display.setFont(Design.Face.TimeFont);
+            display.setTextColor(ForeColor());
+            display.setCursor(90, Design.Menu.Header + Design.Menu.Top);
+
+            display.print("WiFi:");
+            display.println("Not Configured");
+            display.println("Not Configured");
+            display.println("Not Configured");
+            display.println("Not Configured");
+            display.println("Not Configured");
+            display.println("Not Configured");
+            display.display(true);
+            delay(3000);
+          }
+          */
+        }
+      }
     };
-*/
+
+    void InsertWiFiEnding(){
+      WIFI_STEP = 0;
+    };
 
 // The next 3 functions allow you to add your own WatchFaces, there are examples that do work below.
 /*
@@ -119,23 +159,26 @@ class OverrideGSR : public WatchyGSR {
     };
 */
 
-/*
     bool InsertHandlePressed(uint8_t SwitchNumber, bool &Haptic, bool &Refresh) {
       switch (SwitchNumber){
-        case 2: //Back
-          Haptic = true;  // Cause Hptic feedback if set to true.
-          Refresh = true; // Cause the screen to be refreshed (redrwawn).
+        case 2: { //Back
+          Haptic = false;  // Cause Hptic feedback if set to true.
+          Refresh = false; // Cause the screen to be refreshed (redrwawn).
+          WIFI_STEP = 1;
+          AskForWiFi();
           return true;  // Respond with "I used a button", so the WatchyGSR knows you actually did something with a button.
           break;
-        case 3: //Up
+        }
+        case 3: { //Up
           return true;
           break;
-        case 4: //Down
+        }
+        case 4: { //Down
           return true;
+        }
       }
       return false;
     };
-*/
 
 /*
     bool OverrideSleepBitmap(){
@@ -148,6 +191,7 @@ class OverrideGSR : public WatchyGSR {
 OverrideGSR watchy;
 
 void setup(){
+  Serial.begin(115200);
   watchy.init();
 }
 
