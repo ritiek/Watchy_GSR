@@ -51,7 +51,7 @@ class OverrideGSR : public WatchyGSR {
           //   }
           HTTPClient http;
           http.setConnectTimeout(3000);
-          String powerURL = "http://192.168.1.20/cm?cmnd=Power%20TOGGLE";
+          String powerURL = "http://192.168.1.35/cm?cmnd=Power0%20TOGGLE";
           http.begin(powerURL.c_str());
           int httpResponseCode = http.GET();
           http.end();
@@ -61,6 +61,7 @@ class OverrideGSR : public WatchyGSR {
           VibeTo(true);
           delay(40);
           VibeTo(false);
+          break;
 
           // TODO: Figure out why there's no text visible on the black screen.
           /*
@@ -82,6 +83,46 @@ class OverrideGSR : public WatchyGSR {
             delay(3000);
           }
           */
+        }
+        case 10: {
+          HTTPClient http;
+          http.setConnectTimeout(3000);
+          String powerURL = "http://192.168.1.34/cm?cmnd=Power0%20TOGGLE";
+          http.begin(powerURL.c_str());
+          int httpResponseCode = http.GET();
+          http.end();
+          WIFI_STEP++;
+          endWiFi();
+
+          VibeTo(true);
+          delay(40);
+          VibeTo(false);
+          break;
+        }
+        case 100: {
+          String powerURL;
+          HTTPClient http;
+          http.setConnectTimeout(3000);
+
+          powerURL = "http://192.168.1.34/cm?cmnd=Power0%20OFF";
+          http.begin(powerURL.c_str());
+          http.GET();
+          VibeTo(true);
+          delay(40);
+          VibeTo(false);
+
+          /* int httpResponseCode = http.GET(); */
+          powerURL = "http://192.168.1.35/cm?cmnd=Power0%20OFF";
+          http.begin(powerURL.c_str());
+          http.GET();
+          /* int httpResponseCode = http.GET(); */
+          http.end();
+          WIFI_STEP++;
+          endWiFi();
+          VibeTo(true);
+          delay(40);
+          VibeTo(false);
+          break;
         }
       }
     };
@@ -162,19 +203,28 @@ class OverrideGSR : public WatchyGSR {
     bool InsertHandlePressed(uint8_t SwitchNumber, bool &Haptic, bool &Refresh) {
       switch (SwitchNumber){
         case 2: { //Back
-          Haptic = false;  // Cause Hptic feedback if set to true.
-          Refresh = false; // Cause the screen to be refreshed (redrwawn).
-          WIFI_STEP = 1;
+          Haptic = false;
+          Refresh = false;
+          WIFI_STEP = 100;
           AskForWiFi();
           return true;  // Respond with "I used a button", so the WatchyGSR knows you actually did something with a button.
           break;
         }
         case 3: { //Up
+          Haptic = false;  // Cause Hptic feedback if set to true.
+          Refresh = false; // Cause the screen to be refreshed (redrwawn).
+          WIFI_STEP = 1;
+          AskForWiFi();
           return true;
           break;
         }
         case 4: { //Down
+          Haptic = false;
+          Refresh = false;
+          WIFI_STEP = 10;
+          AskForWiFi();
           return true;
+          break;
         }
       }
       return false;
