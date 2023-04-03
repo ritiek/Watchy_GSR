@@ -89,10 +89,6 @@ class OverrideGSR : public WatchyGSR {
           WIFI_STEP++;
           endWiFi();
 
-          VibeTo(true);
-          delay(40);
-          VibeTo(false);
-
           break;
         }
         case 4: {
@@ -112,10 +108,6 @@ class OverrideGSR : public WatchyGSR {
           WIFI_STEP++;
           endWiFi();
 
-          VibeTo(true);
-          delay(40);
-          VibeTo(false);
-
           break;
         }
       }
@@ -123,6 +115,9 @@ class OverrideGSR : public WatchyGSR {
 
     void InsertWiFiEnding(){
       WIFI_STEP = 0;
+      VibeTo(true);
+      delay(40);
+      VibeTo(false);
     };
 
 // The next 3 functions allow you to add your own WatchFaces, there are examples that do work below.
