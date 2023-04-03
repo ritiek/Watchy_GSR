@@ -1,4 +1,5 @@
 #include "Watchy_GSR.h"
+#include <libssh/libssh.h>
 
 // Place all of your data and variables here.
 
@@ -44,11 +45,90 @@ class OverrideGSR : public WatchyGSR {
     void InsertWiFi(){
       switch (WIFI_STEP){
         case 2: {
+          ssh_session session;
+          ssh_channel channel;
+          int rc;
+          session = ssh_new();
+          if (session == NULL) {
+            Serial.println("Session's NULL");
+            endWiFi();
+            return;
+          }
+          ssh_options_set(session, SSH_OPTIONS_USER, "ritiek");
+          ssh_options_set(session, SSH_OPTIONS_HOST, "192.168.1.39");
+
+          rc = ssh_connect(session);
+          if (rc != SSH_OK) {
+            Serial.println("SSH's not okay");
+            ssh_disconnect(session);
+            ssh_free(session);
+            endWiFi();
+            return;
+          }
+
+          char *password = "my_machine_password";
+          rc = ssh_userauth_password(session, NULL, password);
+
+          if (rc != SSH_AUTH_SUCCESS) {
+            Serial.println("Error authenticating with password");
+            Serial.println(ssh_get_error(session));
+            ssh_disconnect(session);
+            ssh_free(session);
+            endWiFi();
+            return;
+          }
+
+          channel = ssh_channel_new(session);
+          if (channel == NULL) {
+            Serial.println("Channel's NULL");
+            ssh_channel_close(channel);
+            ssh_channel_free(channel);
+            ssh_disconnect(session);
+            ssh_free(session);
+            endWiFi();
+            return;
+          }
+          rc = ssh_channel_open_session(channel);
+          rc = ssh_channel_request_exec(channel, "touch ~/watchy_says_hello");
+          if (rc != SSH_OK) {
+            Serial.println("Failed to execute command");
+            ssh_channel_close(channel);
+            ssh_channel_free(channel);
+            ssh_disconnect(session);
+            ssh_free(session);
+            endWiFi();
+            return;
+          }
+
+          ssh_channel_close(channel);
+          ssh_channel_free(channel);
+          ssh_disconnect(session);
+          ssh_free(session);
+          endWiFi();
+        }
+        case 3: {
           // TODO: Make sure this is resilient using the following?
           // if (WiFi.status() != WL_CONNECTED){
           //   if(currentWiFi() == WL_CONNECT_FAILED){
           //     break;
           //   }
+
+          String powerURL;
+          HTTPClient http;
+          http.setConnectTimeout(3000);
+
+          powerURL = "http://192.168.1.34/cm?user=admin&password=mypassword&cmnd=Power0%20ON";
+          http.begin(powerURL.c_str());
+          /* int httpResponseCode = http.GET(); */
+          http.GET();
+
+          powerURL = "http://192.168.1.35/cm?user=admin&password=mypassword&cmnd=Power0%20ON";
+          http.begin(powerURL.c_str());
+          http.GET();
+
+          http.end();
+          WIFI_STEP++;
+          endWiFi();
 
           // TODO: Figure out why there's no text visible on the black screen.
           /*
@@ -70,24 +150,6 @@ class OverrideGSR : public WatchyGSR {
             delay(3000);
           }
           */
-        }
-        case 3: {
-          String powerURL;
-          HTTPClient http;
-          http.setConnectTimeout(3000);
-
-          powerURL = "http://192.168.1.34/cm?user=admin&password=password&cmnd=Power0%20ON";
-          http.begin(powerURL.c_str());
-          /* int httpResponseCode = http.GET(); */
-          http.GET();
-
-          powerURL = "http://192.168.1.35/cm?user=admin&password=password&cmnd=Power0%20ON";
-          http.begin(powerURL.c_str());
-          http.GET();
-
-          http.end();
-          WIFI_STEP++;
-          endWiFi();
 
           break;
         }
@@ -96,11 +158,11 @@ class OverrideGSR : public WatchyGSR {
           HTTPClient http;
           http.setConnectTimeout(3000);
 
-          powerURL = "http://192.168.1.34/cm?user=admin&password=password&cmnd=Power0%20OFF";
+          powerURL = "http://192.168.1.34/cm?user=admin&password=mypassword&cmnd=Power0%20OFF";
           http.begin(powerURL.c_str());
           http.GET();
 
-          powerURL = "http://192.168.1.35/cm?user=admin&password=password&cmnd=Power0%20OFF";
+          powerURL = "http://192.168.1.35/cm?user=admin&password=mypassword&cmnd=Power0%20OFF";
           http.begin(powerURL.c_str());
           http.GET();
 
