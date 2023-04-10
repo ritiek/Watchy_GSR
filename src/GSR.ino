@@ -51,8 +51,9 @@ class OverrideGSR : public WatchyGSR {
           session = ssh_new();
           if (session == NULL) {
             Serial.println("Session's NULL");
+            WIFI_STEP++;
             endWiFi();
-            return;
+            break;
           }
           ssh_options_set(session, SSH_OPTIONS_USER, "ritiek");
           ssh_options_set(session, SSH_OPTIONS_HOST, "192.168.1.39");
@@ -62,8 +63,9 @@ class OverrideGSR : public WatchyGSR {
             Serial.println("SSH's not okay");
             ssh_disconnect(session);
             ssh_free(session);
+            WIFI_STEP++;
             endWiFi();
-            return;
+            break;
           }
 
           char *password = "my_machine_password";
@@ -74,8 +76,9 @@ class OverrideGSR : public WatchyGSR {
             Serial.println(ssh_get_error(session));
             ssh_disconnect(session);
             ssh_free(session);
+            WIFI_STEP++;
             endWiFi();
-            return;
+            break;
           }
 
           channel = ssh_channel_new(session);
@@ -85,26 +88,30 @@ class OverrideGSR : public WatchyGSR {
             ssh_channel_free(channel);
             ssh_disconnect(session);
             ssh_free(session);
+            WIFI_STEP++;
             endWiFi();
-            return;
+            break;
           }
           rc = ssh_channel_open_session(channel);
-          rc = ssh_channel_request_exec(channel, "touch ~/watchy_says_hello");
+          rc = ssh_channel_request_exec(channel, "systemctl suspend");
           if (rc != SSH_OK) {
             Serial.println("Failed to execute command");
             ssh_channel_close(channel);
             ssh_channel_free(channel);
             ssh_disconnect(session);
             ssh_free(session);
+            WIFI_STEP++;
             endWiFi();
-            return;
+            break;
           }
 
           ssh_channel_close(channel);
           ssh_channel_free(channel);
           ssh_disconnect(session);
           ssh_free(session);
+          WIFI_STEP++;
           endWiFi();
+          break;
         }
         case 3: {
           // TODO: Make sure this is resilient using the following?
